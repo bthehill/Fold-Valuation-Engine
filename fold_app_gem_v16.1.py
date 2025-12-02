@@ -4,7 +4,7 @@ import numpy as np
 from typing import Dict, Any
 
 # --- CONFIGURATION & CONSTANTS ---
-PAGE_TITLE = "FOLD Valuation Engine"
+PAGE_TITLE = "XGA Valuation Engine"
 BLOCKS_PER_YEAR = 2_628_000  # 7,200 slots/day * 365
 FOLD_TOTAL_SUPPLY = 2_000_000
 
@@ -13,19 +13,19 @@ XGA_TOTAL_SUPPLY = 270_000_000
 AIRDROP_RATIO = 5.0 # Fixed: 5 XGA per 1 FOLD
 
 SCENARIO_PRESETS: Dict[str, Dict[str, float]] = {
-    "Sam – Conservative": {
+    "Conservative": {
         "market_share_pct": 10,
         "adjustment_rate_pct": 25,
         "success_rate_pct": 30,
         "avg_bid_eth": 0.05,
     },
-    "Sam – Realistic": {
+    "Realistic": {
         "market_share_pct": 25,
         "adjustment_rate_pct": 40,
         "success_rate_pct": 50,
         "avg_bid_eth": 0.10,
     },
-    "Sam – Optimistic": {
+    "Optimistic": {
         "market_share_pct": 40,
         "adjustment_rate_pct": 60,
         "success_rate_pct": 70,
@@ -36,42 +36,120 @@ SCENARIO_PRESETS: Dict[str, Dict[str, float]] = {
 # --- PAGE SETUP ---
 st.set_page_config(page_title=PAGE_TITLE, layout="wide", page_icon="⚡")
 
+# --- XGA BRANDED CSS (DEEP CONTRAST) ---
 st.markdown("""
 <style>
-    /* Main Background - Pure Black */
-    .stApp { background-color: #000000; }
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+
+    /* CORE BACKGROUNDS - PURE BLACK */
+    .stApp { 
+        background-color: #000000 !important; 
+        font-family: 'Inter', sans-serif;
+        color: #E0E0E0;
+    }
     
-    /* Sleek Cards */
+    /* SIDEBAR STYLING */
+    [data-testid="stSidebar"] { 
+        background-color: #0a0a0a; 
+        border-right: 1px solid #222; 
+    }
+    
+    /* UNIFIED CARD STYLING (Glassmorphism) */
     .metric-card {
-        background-color: #121212;
+        background-color: rgba(20, 20, 20, 0.9);
         border: 1px solid #333;
         border-radius: 12px;
-        padding: 20px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-        margin-bottom: 10px;
+        padding: 24px;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+        margin-bottom: 16px;
+        transition: transform 0.2s, border-color 0.2s;
+    }
+    .metric-card:hover {
+        border-color: #BB86FC; /* XGA Purple Glow */
+        transform: translateY(-2px);
     }
     
-    /* Text Overrides - High Visibility */
-    h1, h2, h3, p, span, li, label { color: #ffffff !important; }
-    .stMetricLabel { color: #cccccc !important; }
-    .stMetricValue { color: #ffffff !important; }
+    /* HIGH CONTRAST TEXT HIERARCHY */
+    h1, h2, h3, h4, h5 { 
+        color: #FFFFFF !important; 
+        letter-spacing: -0.5px; 
+        font-weight: 800; 
+    }
+    p, span, li, label, div { 
+        color: #E0E0E0 !important; 
+    }
     
-    /* Custom Typography */
-    .money-green { color: #00e676 !important; font-weight: bold; font-size: 1.8rem; }
-    .valuation-blue { color: #2979ff !important; font-weight: bold; font-size: 1.8rem; }
-    .card-label { color: #ffffff; font-size: 1.1rem; font-weight: 600; }
-    .card-sub { color: #999999; font-size: 0.9rem; }
+    /* STREAMLIT NATIVE METRIC OVERRIDES */
+    .stMetricLabel { 
+        color: #888888 !important; 
+        font-size: 0.9rem !important; 
+        text-transform: uppercase; 
+        letter-spacing: 1px; 
+    }
+    .stMetricValue { 
+        color: #FFFFFF !important; 
+        font-family: 'Inter', sans-serif; 
+        font-weight: 700; 
+    }
+    small { color: #888888 !important; }
     
-    /* Disclaimer */
-    .disclaimer-box {
+    /* BRAND COLORS (TEXT CLASSES) */
+    .money-green { 
+        color: #00E676 !important; 
+        font-weight: 800; 
+        font-size: 2rem; 
+        text-shadow: 0 0 15px rgba(0, 230, 118, 0.25);
+    }
+    .valuation-purple { 
+        color: #BB86FC !important; /* XGA Neon Purple */
+        font-weight: 800; 
+        font-size: 2rem; 
+        text-shadow: 0 0 15px rgba(187, 134, 252, 0.35);
+    }
+    .card-label { 
+        color: #FFFFFF !important; 
+        font-size: 0.85rem; 
+        font-weight: 600; 
+        text-transform: uppercase; 
+        letter-spacing: 1px;
+        margin-bottom: 8px;
+        display: block;
+    }
+    .card-sub { 
+        color: #888888 !important; 
+        font-size: 0.85rem; 
+        margin-top: 4px;
+        display: block;
+    }
+    
+    /* STREAMLIT WIDGET OVERRIDES */
+    .stButton>button {
         background-color: #1a1a1a;
-        border: 1px solid #ffb300;
+        color: #BB86FC !important;
+        border: 1px solid #BB86FC;
         border-radius: 8px;
-        padding: 15px;
-        font-size: 0.8rem;
-        color: #ffb300 !important;
-        margin-top: 20px;
+        font-weight: 600;
+        transition: all 0.3s;
     }
+    .stButton>button:hover {
+        background-color: #BB86FC;
+        color: #000 !important;
+        box-shadow: 0 0 15px rgba(187, 134, 252, 0.5);
+    }
+    
+    /* DISCLAIMER */
+    .disclaimer-box {
+        background-color: rgba(255, 152, 0, 0.05);
+        border: 1px solid #FF9800;
+        border-radius: 8px;
+        padding: 16px;
+        font-size: 0.75rem;
+        color: #FF9800 !important;
+        margin-top: 24px;
+        line-height: 1.4;
+    }
+    .disclaimer-box b { color: #FF9800 !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -88,7 +166,6 @@ def calculate_vault_revenue_eth(
     kickback_rate: float,
     fold_share: float
 ) -> float:
-    """Calculates annual ETH revenue flowing to the FOLD vault."""
     total_slots = BLOCKS_PER_YEAR * market_share
     adjustable = total_slots * adjustment_rate
     successful = adjustable * success_rate
@@ -104,7 +181,7 @@ def update_from_preset():
 
 # --- INITIALIZATION ---
 if "initialized" not in st.session_state:
-    defaults = SCENARIO_PRESETS["Sam – Realistic"]
+    defaults = SCENARIO_PRESETS["Realistic"]
     for k, v in defaults.items():
         st.session_state[k] = v
     st.session_state["eth_price"] = 3200.0
@@ -120,44 +197,48 @@ if "initialized" not in st.session_state:
 
 # --- SIDEBAR CONTROLS ---
 with st.sidebar:
-    st.title("⚡ Settings")
+    st.markdown("## ⚡ **XGA** | CONTROLS")
     
-    # 1. Currency Toggle
+    # 1. Currency
     st.session_state["currency_mode"] = st.radio(
-        "Currency", ["USD ($)", "ETH (Ξ)"], horizontal=True
+        "Base Currency", ["USD ($)", "ETH (Ξ)"], horizontal=True, label_visibility="collapsed"
     )
     is_usd = st.session_state["currency_mode"] == "USD ($)"
     sym = "$" if is_usd else "Ξ"
 
-    # 2. Preset Selector
+    # 2. Preset
+    st.markdown("### SCENARIOS")
     st.selectbox(
-        "Load Scenario",
+        "Load Preset",
         options=list(SCENARIO_PRESETS.keys()) + ["Custom"],
         index=1,
         key="preset_selector",
-        on_change=update_from_preset
+        on_change=update_from_preset,
+        label_visibility="collapsed"
     )
+    
     st.markdown("---")
 
-    # 3. Market Environment
-    st.header("1. Market Environment")
+    # 3. Market Data
+    st.markdown("### MARKET DATA")
     st.number_input("ETH Price ($)", min_value=0.0, step=50.0, key="eth_price")
     
-    st.checkbox("Lock Staked Amount (400k Cap)", key="staked_lock")
+    st.checkbox("Enforce 400k Launch Cap", key="staked_lock")
     if st.session_state["staked_lock"]:
         st.session_state["staked_pct"] = 20
-        st.caption("✅ Locked at 20% (400k FOLD)")
+        st.caption("🔒 Staking Capped at 20% (400k FOLD)")
     else:
-        st.slider("% FOLD Staked", 0, 100, key="staked_pct")
+        st.slider("Total % FOLD Staked", 0, 100, key="staked_pct")
 
-    # GLOBAL USER FOLD INPUT
-    st.markdown("👇 **Your Position (Drives All Tabs)**")
-    st.number_input("My FOLD Balance", min_value=0.0, step=100.0, key="user_fold")
+    # GLOBAL USER INPUT
+    st.markdown("---")
+    st.markdown("### MY POSITION")
+    st.number_input("FOLD Holdings", min_value=0.0, step=100.0, key="user_fold")
 
     st.markdown("---")
 
-    # 4. XGA Assumptions
-    st.header("2. XGA Adoption")
+    # 4. Assumptions
+    st.markdown("### PROTOCOL ASSUMPTIONS")
     st.slider("Market Share %", 0, 50, key="market_share_pct")
     st.slider("Adjustment Rate %", 0, 100, key="adjustment_rate_pct")
     st.slider("Success Rate %", 0, 100, key="success_rate_pct")
@@ -166,14 +247,14 @@ with st.sidebar:
     st.markdown("---")
 
     # 5. Valuation
-    st.header("3. Valuation")
+    st.markdown("### VALUATION")
     st.slider("Target P/E Ratio", 5, 60, key="pe_ratio")
     st.number_input("Ref. FOLD Price ($)", min_value=0.0, step=0.05, key="current_price")
 
     st.markdown("""
     <div class="disclaimer-box">
         <b>⚠️ DISCLAIMER</b><br>
-        Not financial advice. Based on hypothetical models.
+        This tool is for educational purposes only. Not financial advice. Calculations based on unverified internal projections.
     </div>
     """, unsafe_allow_html=True)
 
@@ -222,43 +303,71 @@ my_portfolio_val = user_fold * implied_price
 
 
 # --- UI LAYOUT: TABS ---
-st.title(f"⚡ {PAGE_TITLE}")
+st.title(f"{PAGE_TITLE}")
 
 tab_dash, tab_prof, tab_xga, tab_faq = st.tabs([
-    "📊 Market Dashboard", 
-    "👤 My Portfolio", 
-    "🎁 XGA Rewards", 
-    "📚 FAQ & Resources"
+    "📊 DASHBOARD", 
+    "👤 MY PORTFOLIO", 
+    "🎁 XGA REWARDS", 
+    "📚 RESOURCES"
 ])
 
 # ==========================================
 # TAB 1: DASHBOARD
 # ==========================================
 with tab_dash:
-    st.markdown("### 📈 Protocol Health")
+    st.markdown("#### PROTOCOL HEALTH")
     
     m1, m2, m3, m4 = st.columns(4)
     
-    # Formatting Logic: 4 decimals for ETH, 2 for USD
+    # Formatting Logic
     fmt = ",.2f" if is_usd else ",.4f"
-    
     label_rev = f"{sym}{vault_rev_display/1_000_000:.1f}M" if is_usd else f"{sym}{vault_rev_display:,.0f}"
     
-    m1.metric("Annual Vault Revenue", label_rev, help="Net revenue after kickbacks")
-    
-    # Applied special formatting to these two:
-    m2.metric("Dividend Per Staked Token", f"{sym}{yield_per_token:{fmt}}", help="Cash flow to STAKED tokens")
-    m3.metric("Implied FOLD Price", f"{sym}{implied_price:{fmt}}", help=f"Based on {st.session_state['pe_ratio']}x P/E")
-    
-    m4.metric(f"Upside vs Current", f"{upside:,.0f}%", f"Yield: {div_yield:.1%}")
+    # Using Custom Card HTML for consistency
+    with m1:
+        st.markdown(f"""
+        <div class="metric-card">
+            <span class="card-label">Vault Revenue (Annual)</span><br>
+            <span class="money-green">{label_rev}</span><br>
+            <span class="card-sub">Net to Insurance Vault</span>
+        </div>
+        """, unsafe_allow_html=True)
+        
+    with m2:
+        st.markdown(f"""
+        <div class="metric-card">
+            <span class="card-label">Dividend / Token</span><br>
+            <span class="money-green">{sym}{yield_per_token:{fmt}}</span><br>
+            <span class="card-sub">Cash flow per Staked FOLD</span>
+        </div>
+        """, unsafe_allow_html=True)
+        
+    with m3:
+        st.markdown(f"""
+        <div class="metric-card">
+            <span class="card-label">Implied Price</span><br>
+            <span class="valuation-purple">{sym}{implied_price:{fmt}}</span><br>
+            <span class="card-sub">Based on {st.session_state['pe_ratio']}x P/E</span>
+        </div>
+        """, unsafe_allow_html=True)
+        
+    with m4:
+        st.markdown(f"""
+        <div class="metric-card">
+            <span class="card-label">Yield APY</span><br>
+            <span class="valuation-purple">{div_yield:.1%}</span><br>
+            <span class="card-sub">Upside: {upside:,.0f}%</span>
+        </div>
+        """, unsafe_allow_html=True)
 
-    st.caption(f"**Stats:** Effective Fill: `{eff_fill:.1%}` | Staked: `{staked_amt:,.0f}` FOLD")
     st.divider()
 
     # Sensitivity
     c1, c2 = st.columns(2)
     with c1:
-        st.subheader("📈 Market Share Sensitivity")
+        st.markdown("#### SENSITIVITY: MARKET SHARE")
+        st.caption("How price reacts to adoption")
         ms_range = range(5, 55, 5)
         prices = []
         for x in ms_range:
@@ -269,7 +378,8 @@ with tab_dash:
         st.line_chart(pd.DataFrame({"Share %": ms_range, "Price": prices}).set_index("Share %"))
 
     with c2:
-        st.subheader("📊 36-Month Ramp")
+        st.markdown("#### 36-MONTH RAMP")
+        st.caption("Projected revenue growth")
         ramp_data = []
         for m in [1, 12, 24, 36]:
             factor = np.interp(m, [1, 36], [0.1, 1.0])
@@ -278,27 +388,27 @@ with tab_dash:
         st.bar_chart(pd.DataFrame(ramp_data).set_index("Month"))
 
 # ==========================================
-# TAB 2: MY PROFILE
+# TAB 2: MY PORTFOLIO (RENAMED)
 # ==========================================
 with tab_prof:
-    st.header("👤 Personal Income Projector")
-    st.info(f"Projections based on holding **{user_fold:,.0f} FOLD** (set in Sidebar).")
+    st.markdown(f"#### INCOME PROJECTOR ({user_fold:,.0f} FOLD)")
     
     st.markdown("""
-    <div style="background-color: #1a1a1a; padding: 15px; border-radius: 8px; border-left: 5px solid #00e676; margin-bottom: 20px;">
-        <b>💸 Source of Funds: Providing Captive Insurance</b><br>
-        This income is an insurance premium paid to you for staking FOLD in the Captive Insurance Vault. 
-        You are underwriting the risk of the XGA Relay.
+    <div style="background-color: rgba(0, 230, 118, 0.1); padding: 15px; border-radius: 8px; border-left: 4px solid #00E676; margin-bottom: 20px;">
+        <span style="color: #00E676; font-weight: bold;">💸 SOURCE OF YIELD: CAPTIVE INSURANCE</span><br>
+        <span style="color: #E0E0E0; font-size: 0.9rem;">
+        This income is an insurance premium paid to you for staking FOLD in the <b>Captive Insurance Vault</b>. 
+        You are underwriting the risk of XGA failure.
+        </span>
     </div>
     """, unsafe_allow_html=True)
     
     col_kpi1, col_kpi2, col_kpi3 = st.columns(3)
     
-    # Use same formatting precision here for consistency
     with col_kpi1:
         st.markdown(f"""
         <div class="metric-card">
-            <span class="card-label">Monthly Passive Income</span><br>
+            <span class="card-label">MONTHLY INCOME</span><br>
             <span class="money-green">{sym}{my_income_annual/12:{fmt}}</span>
         </div>
         """, unsafe_allow_html=True)
@@ -306,7 +416,7 @@ with tab_prof:
     with col_kpi2:
         st.markdown(f"""
         <div class="metric-card">
-            <span class="card-label">Annual Passive Income</span><br>
+            <span class="card-label">ANNUAL INCOME</span><br>
             <span class="money-green">{sym}{my_income_annual:{fmt}}</span>
         </div>
         """, unsafe_allow_html=True)
@@ -314,32 +424,31 @@ with tab_prof:
     with col_kpi3:
         st.markdown(f"""
         <div class="metric-card">
-            <span class="card-label">Projected Portfolio Value</span><br>
-            <span class="valuation-blue">{sym}{my_portfolio_val:{fmt}}</span>
+            <span class="card-label">PROJECTED VALUE</span><br>
+            <span class="valuation-purple">{sym}{my_portfolio_val:{fmt}}</span>
         </div>
         """, unsafe_allow_html=True)
 
 # ==========================================
-# TAB 3: XGA REWARDS (UPDATED)
+# TAB 3: XGA REWARDS (BRANDED)
 # ==========================================
 with tab_xga:
-    st.header("🎁 XGA Incentive Calculator")
-    st.markdown("Estimates based on Sam Bacha's target metrics.")
+    st.markdown("#### XGA INCENTIVE CALCULATOR")
     
     # 1. Inputs
     col_x1, col_x2 = st.columns([1, 2])
     with col_x1:
-        st.markdown("#### 1. Market Cap Settings")
+        st.markdown("**TARGET MARKET CAP ($M)**")
         xga_mcap_input = st.slider(
-            "XGA Target Market Cap ($M)", 
+            "Target MCAP", 
             min_value=100, max_value=900, value=300, step=50,
-            help="Sam estimated between $300M - $600M start."
+            label_visibility="collapsed"
         )
         xga_mcap = xga_mcap_input * 1_000_000
         xga_price = xga_mcap / XGA_TOTAL_SUPPLY
     
     with col_x2:
-        st.markdown("#### 2. Incentive Settings")
+        st.markdown("**INCENTIVE PARAMETERS**")
         st.info("Applies **340% ROI** (3-month active participation) to your capital base.")
 
     st.divider()
@@ -359,8 +468,8 @@ with tab_xga:
     with xc1:
         st.markdown(f"""
         <div class="metric-card">
-            <span class="card-label">Implied XGA Price</span><br>
-            <span class="valuation-blue">${xga_price:.2f}</span><br>
+            <span class="card-label">IMPLIED XGA PRICE</span><br>
+            <span class="valuation-purple">${xga_price:.2f}</span><br>
             <span class="card-sub">${xga_mcap_input}M Cap / 270M Supply</span>
         </div>
         """, unsafe_allow_html=True)
@@ -368,18 +477,18 @@ with tab_xga:
     with xc2:
         st.markdown(f"""
         <div class="metric-card">
-            <span class="card-label">Retroactive Airdrop Value</span><br>
+            <span class="card-label">AIRDROP VALUE</span><br>
             <span class="money-green">${est_airdrop_value:,.2f}</span><br>
-            <span class="card-sub">{est_airdrop_tokens:,.0f} XGA Tokens (5x Fixed)</span>
+            <span class="card-sub">{est_airdrop_tokens:,.0f} XGA (5x Fixed)</span>
         </div>
         """, unsafe_allow_html=True)
         
     with xc3:
         st.markdown(f"""
         <div class="metric-card">
-            <span class="card-label">Active Incentive Value</span><br>
+            <span class="card-label">INCENTIVE VALUE</span><br>
             <span class="money-green">${est_incentive_value:,.2f}</span><br>
-            <span class="card-sub">340% ROI on Capital (3 Mo)</span>
+            <span class="card-sub">340% ROI (3 Mo)</span>
         </div>
         """, unsafe_allow_html=True)
 
@@ -396,10 +505,10 @@ with tab_xga:
         """)
 
 # ==========================================
-# TAB 4: FAQ (NEW)
+# TAB 4: FAQ (CLEAN)
 # ==========================================
 with tab_faq:
-    st.header("📚 FAQ & Resources")
+    st.markdown("#### RESOURCES")
     
     with st.expander("❓ Is the Lido Partnership Confirmed?"):
         st.write("""
@@ -415,13 +524,6 @@ with tab_faq:
         They get paid TWICE: once for the XGA slot, and once for the rest of the block (Flashbots).
         """)
         
-    with st.expander("❓ Why 36 Months?"):
-        st.write("""
-        **Market Liquidity.**
-        Even if tech is ready, Searchers (traders) need time to build bots to buy these new 'Future Slots'.
-        Sam models utilization ramping from 10% to 86% over 3 years.
-        """)
-        
     with st.expander("❓ What about the 270M XGA Supply?"):
         st.write("""
         **Tokenomics:**
@@ -432,4 +534,4 @@ with tab_faq:
 
 # --- FOOTER ---
 st.markdown("---")
-st.caption("Community Edition v16.1 | Disclaimer: Hypothetical model for exploratory purposes. Not financial advice.")
+st.caption("XGA Valuation Engine v18.0 | Not Financial Advice")
